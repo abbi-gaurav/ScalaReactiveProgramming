@@ -1,0 +1,183 @@
+* event driven systems
+** composed of loosely coupled event handlers
+** events are handled asynchronously
+* scalable
+** sclae up 
+*** parallelism using multiple core systems
+** scale out
+*** multiple server nodes
+** minimized shared mutable state
+** location transparency, resilience for scale out
+* resilient
+** loose coupling
+** strong encapsulation of state
+** pervasive supervisor hierarchies                                  :doubt:
+* techinques to use
+** fundamental constructions from functional programming to *get composable event abstractions*
+* *functions are traits, so they can also be subclassed*
+** e.g. trait Map[K,V] extends (K => V)
+** trait Seq[E] extends (Int => E)
+* for-expressions
+** the scala compiler translates for-expressions into map,flatMap and a *lazy variant of filter*
+** 
+* monads
+** Monad M is a parameteric type M[T] that has *trait M[T]{}*
+*** flatMap *def flatMap[S](f:T=>M[S]):M[S]*
+*** unit *def unit[T](t:T):M[T]* //unit is defined at object level
+*** map in terms of flatMap and unit
+**** m map f = m flatMap (x => unit(f(x)))
+**** m map f = m flatMap (f andThen unit)
+*** and satisfy some algebraic laws
+**** *associativity = (m flatMap f) flatMap g = m flatMap (x => f(x) flatMap g)*
+**** *left unit = unit(x) flatMap f = f*
+**** *right unit = m flatMap unit = m*
+* state
+** an object is stateful if its behaviour depends upon its history
+** referential transparency
+*** val x = E; val y = E; ===> x == y
+** operational equivalence
+*** x and y are operationally equivalent if no possible test can distinguish between them
+* loops
+** for loops translate to foreach
+*** e.g. for (i <- 1 until 3) {...} ===> (1 until 3) foreach {...}
+* Functional Reactive programming
+** reactive programming is about reacting to seq of events that happen over time
+** functional view: take these events and aggregate them to a signal
+*** function : time => value domain
+** no propagating updates to mutable state, *but create a new signal from existing one*
+* Monads and effects
+** Try[T] == is a monad that handles exception
+* Future[T] =  a monad that handles both exception and latency
+** future body is executed only once no matter how many and when callbacks are bounded
+** recovery
+*** recoverWith(f:PartialFunction[Throwable, Future[T]]):Future[T]
+*** recover(f:PartialFunction[Throwable, T]):Future[T] 
+** whenever you have a long-running computation or blocking make sure to run it inside the blocking construct
+*** blocking { Thread.sleep(1000)}
+** An asynchronous computation that has a blocking construct is typically scheduled in a separate thread to avoid potential deadlock.
+** let's say you have a future f that waits on a timer or for a resource or a monitor condition that can only be fulfilled by some other future g.the part of the code in f that does the waiting should be wrapped in the blocking, otherwise the future g might never be run.
+
+* Promise
+** like a mailbox
+** can only be completed once
+*** subsequent completion attempts will fail
+*** use tryComplete in such scenarios
+* Iterables and observables
+** type Iterable[T] = () => (() => Try[Option[T]])
+** type Observable = (Try[Option[T]] => Unit) => Unit
+*** type Observer[T] = (Throwable => Unit, () => Unit, T => Unit)
+*** type Observable[T] = Observer[T] => Unit
+* Observable
+** is a monad
+** flatMap is different since values will come asynchronously
+** def flatMap[S](f:T => Observable[S]):Observable[S] = map(f).merge
+** cold observable : when each subscriber get its own private copy of the stream
+*** e.g. a stream of random numbers
+*** *subscription has a side effect*
+** hot observable : when source is shared by all subcribers
+*** *subcription has no side effects*
+** *ubsubcribing != cancellation*
+** * def reduce(f:(T,T) => T):Observable[T]*
+*** return of reduce is also an Observable. this is to make sure our flow is always asynchronous.
+** Rx contract
+*** auto unsubscribe behaviour
+*** (onNext)* (onCompleted+onError)?
+*** no overlapping calls
+* Subjects
+** is a observable
+** what a promise is to a future, an subject is to a Observable
+** it is more like a channel where you can publish values on one side and receive on the other side
+** PublishSubjects
+** ReplaySubjects
+*** used a lot in RxAndroid
+** AsyncSubject
+*** remembers the last value before completion
+** dont play well with backpressure
+** have mutable state
+* Actors 
+** has an identity
+** has a behaviour
+** always interact with asynchronous message passing
+** *Erlang : a purely fucntional language whose concurrency model is based on actors*
+** *Akka: an actor model for jvm with scala and java apis*
+** multi tasking
+** multi threading
+** become: asynchronous change of behavior only when next message is processed
+** are always created by actors, so they always form a heirarchy
+** no direct access to Actor behaviour
+** Messages:
+*** received sequentially by enqueue and dequeue
+*** *each message processing is an atomic unit of execution*
+*** *behavior change is effective before processing next message*
+*** *it is a good practice to describe all the messages of an actor in its companion object*
+** Failure handling in messages
+*** failures are also signalled by sending messages
+*** Mandatory parental Supervision
+*** default supervision strategy
+**** restart actor when they fail
+*** Strategy types
+**** OneForOneStrategy : deals with each Actor in isolation
+***** OneForOneStrategy(maxNrOfRetries = 10, withinTimeRange = 1.minute) _implies that we can only restart ten times in a minutes, 11th one will be turned to a stop_
+**** AllForOneStrategy: decision applies to all Children
+*** Restart : 
+**** *ActorRef stays same after restart*
+**** Actor local state can not be kept across restarts
+** lifecycle monitoring
+*** an actorRef implies liveness
+*** restarts are not externally visible
+*** after stop no more responses
+*** deathwatch
+**** context.watch(targetActorRef)
+**** when targetActorRef terminates a Terminated(targetActorRef) message is sent
+**** *if watching, then must handle Terminated, otherwise Actor default behaviour might stop the parent when if handles termiated message by sending a DeathPactException*
+*** child actors : each actor maintains a list of child actors it creates
+**** when context.actorOf returns, a child has been entered
+**** child is removed when Terminated is received or even whithout death watch
+**** an actor name is available IFF there is no such child
+** *error Kernel*
+*** keep important data near the roots, delegate risk to leaves
+*** restarts are recursive (supervised actors are part of the state)
+*** restarts are more frequent near the leaves
+*** avoid restarting actors with important state
+*** puprpose of a restart is to reset the actor to a known good state
+*** try to keep as less important state to leave actors as possible
+*** *make the leaves behave like pure funtions, so that any failures can be easily retried and there is no state managment needed*
+** Persistent Actor state
+*** shall not lose state due to system failure
+*** must persist state as needed
+*** recover state as needed
+*** two possiblities
+**** in place updates
+***** receovery in constant time
+***** data volume depends on number of records
+**** append only fashion
+***** history  can be replayed, audited or restored
+***** processing errors can be fixed retroactively
+***** additional insight
+***** append-only stream optimizes IO bandwidth
+***** immutable changes
+*** immutable snapshots can be used to bound recovery time
+*** how actors do it?
+**** being persistent means "taking notes"
+***  *events are facts about the past*
+**** their purpose is to describe change
+** event stream : broadcasting the message
+*** trait EventStream{}
+* Reactive applications
+** is non-blocking and event driven from top to bottom
+** actors are run by a dispatcher which may be potentially shared and can also run futures
+** Prefer immutable data structure since they can be shared
+** do not refer to actor state from code running asynchronously
+** Prefer *context.become* for different states with data local to the behaviour
+* aside
+** update syntax
+*** f(e1,..,en) = E *is translated to* f.update(E1,...,En) iff there is an update method
+**** also works if n = 0, f() = E ==> f.update(E)
+** partial functions
+*** *isDefinedAt does not gurantee runtime MatchError will not come sine it checks only outer matches*
+** *collect* : it is fuction that takes a seq and a partial function and results in only those value for which Partial function is defined
+*** so no runtime Match error
+** *lift converts the result of applying a partial function from T => Option [T]*
+** folds
+*** *List(a,b,c).foldRight(z)(f) = f(a, f(b, f(c,e)))*
+*** *List(a,b,c).foldLeft(z)(f) = f(f(f(z,a),b),c)*
