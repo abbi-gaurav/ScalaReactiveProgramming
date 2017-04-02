@@ -5,23 +5,18 @@ import java.util.concurrent.TimeUnit
 import akka.Done
 import akka.actor.{ActorSystem, Props}
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.http.scaladsl.model.StatusCodes
-import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.server.{Directives, Route}
 import akka.pattern._
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
-import spray.json.DefaultJsonProtocol._
-import spray.json.RootJsonFormat
 
 import scala.concurrent.Future
 import scala.io.StdIn
 
-object DomainWebServer {
+object DomainWebServer extends Directives with JsonSupport {
   // formats for unmarshalling and marshalling
-  private implicit val itemFormat: RootJsonFormat[Item] = jsonFormat2(Item)
-  private implicit val orderFormat: RootJsonFormat[Order] = jsonFormat1(Order)
+
   private implicit val system = ActorSystem()
   private implicit val timeout = Timeout(1, TimeUnit.SECONDS)
   private val db = system.actorOf(Props[DB])
@@ -29,7 +24,8 @@ object DomainWebServer {
 
   // (fake) async database query api
   def fetchItem(itemId: Long): Future[Option[Item]] = db ? DB.Fetch(itemId) collect {
-    case o: Option[Item] => o
+    case Some(item: Item) => Some(item)
+    case _ => None
   }
 
   def saveOrder(order: Order): Future[Done] = db ? DB.Add(order.items) collect {
