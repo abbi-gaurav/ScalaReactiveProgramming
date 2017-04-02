@@ -15,8 +15,6 @@ import scala.concurrent.Future
 import scala.io.StdIn
 
 object DomainWebServer extends Directives with JsonSupport {
-  // formats for unmarshalling and marshalling
-
   private implicit val system = ActorSystem()
   private implicit val timeout = Timeout(1, TimeUnit.SECONDS)
   private val db = system.actorOf(Props[DB])
@@ -33,7 +31,6 @@ object DomainWebServer extends Directives with JsonSupport {
   }
 
   def main(args: Array[String]) {
-
     // needed to run the route
 
     implicit val materializer = ActorMaterializer()
