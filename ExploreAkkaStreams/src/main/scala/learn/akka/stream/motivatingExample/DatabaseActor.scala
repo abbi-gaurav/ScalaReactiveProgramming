@@ -67,6 +67,8 @@ object DatabaseActor {
   object InsertMessage {
     def ack(message: InsertMessage): Message = TextMessage("ack")
 
+    def ack(message: String): Message = TextMessage(s"ack -- $message")
+
     def parse(text: String): InsertMessage = new InsertMessage(text)
   }
 

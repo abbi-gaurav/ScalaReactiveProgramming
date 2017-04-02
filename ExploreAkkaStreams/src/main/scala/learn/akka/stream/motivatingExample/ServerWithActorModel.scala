@@ -12,9 +12,9 @@ import learn.akka.stream.motivatingExample.DatabaseActor.InsertMessage
 /**
   * Created by gabbi on 02.04.17.
   */
-object WebSocketServer extends App with Directives {
-  implicit val system = ActorSystem("SimpleTcpServer")
-  implicit val materializer = ActorMaterializer()
+object ServerWithActorModel extends App with Directives {
+  private implicit val system = ActorSystem("DatabaseActor")
+  private implicit val materializer = ActorMaterializer()
   private val databaseActor = system.actorOf(Props[DatabaseActor], "database")
 
   val measurementsWebSocketService: Flow[Message, Message, NotUsed] =
