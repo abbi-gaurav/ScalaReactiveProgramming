@@ -13,6 +13,7 @@ class DatabaseActor extends Actor {
   private val database = new Database()
   private var messages: Seq[String] = Nil
   private var count: Int = 0
+  private var flush = true
   private implicit val ec = context.dispatcher
 
   override def preStart(): Unit = context.system.scheduler.scheduleOnce(1 second) {
@@ -24,11 +25,12 @@ class DatabaseActor extends Actor {
       messages = message +: messages
       count += 1
       if (count == 5) {
+        flush = false
         insert()
       }
 
     case Insert =>
-      insert()
+      if(flush) insert() else flush = true
       context.system.scheduler.scheduleOnce(1 second) {
         self ! Insert
       }
