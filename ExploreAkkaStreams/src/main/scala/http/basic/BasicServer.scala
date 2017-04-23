@@ -1,4 +1,4 @@
-package com.learn.akka.http.basic
+package http.basic
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http

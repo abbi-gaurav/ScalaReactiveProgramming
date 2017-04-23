@@ -1,4 +1,4 @@
-package com.learn.akka.http.withModel
+package http.withModel
 
 import akka.Done
 import akka.actor.Actor

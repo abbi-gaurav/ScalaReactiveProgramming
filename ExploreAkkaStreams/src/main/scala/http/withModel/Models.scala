@@ -1,4 +1,4 @@
-package com.learn.akka.http.withModel
+package http.withModel
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import spray.json.{DefaultJsonProtocol, RootJsonFormat}
