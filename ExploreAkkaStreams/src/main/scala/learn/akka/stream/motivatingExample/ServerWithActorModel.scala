@@ -4,7 +4,7 @@ import akka.NotUsed
 import akka.actor.{ActorSystem, Props}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.ws.{Message, TextMessage}
-import akka.http.scaladsl.server.Directives
+import akka.http.scaladsl.server.{Directives, Route}
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Flow
 import learn.akka.stream.motivatingExample.DatabaseActor.InsertMessage
@@ -25,7 +25,7 @@ object ServerWithActorModel extends App with Directives {
           databaseActor ! message
           InsertMessage.ack(message)
       }
-  val route = path("measurement") {
+  val route: Route = path("measurement") {
     get {
       handleWebSocketMessages(measurementsWebSocketService)
     }
