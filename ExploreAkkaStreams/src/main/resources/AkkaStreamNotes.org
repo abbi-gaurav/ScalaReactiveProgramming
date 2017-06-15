@@ -64,8 +64,17 @@ runnable: akka.stream.scaladsl.RunnableGraph[akka.NotUsed] = ...
 ** error is accessible within the stream as a normal data element
 ** a failure means that the stream itself has failed and is collapsing
 ** on the Reactive Streams interface level data elements (including errors) are signaled via onNext while failures raise the onError signal
-** 
 * Akka HTTP
 ** expose an incoming connection in the form of a Source instance
 ** applying backpressure on this Source will make Akka HTTP stop consuming data from the network:
 ** in due time this will lead to a 0 TCP window, effectively applying the backpressure on the sending party itself
+* Integrating Actor with Stream
+** Actors useful when:
+*** mutable state
+** Streams
+*** flow contraol
+** sometimes both are needed 
+** a discontinuity between 
+*** the flow-controlled, unbounded stream-processing offered by the Akka Streams API, 
+*** and the asynchronous messaging of actors, which is not flow-controlled
+** Ask Pattern with mapAsync
