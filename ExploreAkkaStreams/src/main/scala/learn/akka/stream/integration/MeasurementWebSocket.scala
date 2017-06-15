@@ -1,6 +1,5 @@
 package learn.akka.stream.integration
 
-import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.ws.{Message, TextMessage}
@@ -8,6 +7,7 @@ import akka.http.scaladsl.server.{Directives, Route}
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Flow
 import akka.util.Timeout
+import akka.{Done, NotUsed}
 import learn.akka.stream.integration.Total.{CurrentTotal, GetTotal, Increment}
 
 import scala.concurrent.Future
@@ -19,6 +19,7 @@ import scala.concurrent.duration._
 object MeasurementWebSocket extends App with Directives {
   private implicit val system: ActorSystem = ActorSystem("MeasurementWebSocket")
   private implicit val materializer: ActorMaterializer = ActorMaterializer()
+  private implicit val executionContext = system.dispatcher
   private val total: ActorRef = system.actorOf(Props[Total], "total")
 
   val measurementsWebSocket: Flow[Message, Message, NotUsed] =
@@ -30,10 +31,13 @@ object MeasurementWebSocket extends App with Directives {
       .mapAsync(parallelism = 1)(f = identity)
       .groupedWithin(n = 1000, d = 1 second)
       .map(messages => (messages.last, Messages.parse(messages)))
-      .map {
+      .mapAsync(1) {
         case (lastMessage, measurements) =>
-          total ! Increment(measurements.sum)
-          lastMessage
+          import akka.pattern.ask
+          implicit val askTimeout = Timeout(30 seconds)
+          (total ? Increment(measurements.sum))
+            .mapTo[Done]
+            .map(_ => lastMessage)
       }
       .map(Messages.ack)
 
@@ -47,8 +51,8 @@ object MeasurementWebSocket extends App with Directives {
         import akka.pattern.ask
         implicit val askTimeout = Timeout(30 seconds)
         onSuccess(total ? GetTotal) {
-          case CurrentTotal(total) =>
-            complete(s"The total is : $total")
+          case CurrentTotal(totalValue) =>
+            complete(s"The total is : $totalValue")
         }
       }
     }

@@ -1,5 +1,6 @@
 package learn.akka.stream.integration
 
+import akka.Done
 import akka.actor.Actor
 import learn.akka.stream.integration.Total.{CurrentTotal, GetTotal, Increment}
 
@@ -10,7 +11,9 @@ class Total extends Actor {
   var total: Long = 0
 
   override def receive: Receive = {
-    case Increment(value) => total += value
+    case Increment(value) =>
+      total += value
+      sender() ! Done
     case GetTotal => sender() ! CurrentTotal(total)
   }
 }
