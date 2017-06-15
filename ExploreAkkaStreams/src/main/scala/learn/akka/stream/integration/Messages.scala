@@ -8,7 +8,7 @@ import akka.http.scaladsl.model.ws.TextMessage
 object Messages {
   def ack(lastMessage: String): TextMessage = TextMessage(s"ack $lastMessage")
 
-  def parse(strings: Seq[String]): Measurements = Measurements(strings.size)
+  def parse(strings: Seq[String]): Measurements = Measurements(strings.size, strings.last)
 }
 
-case class Measurements(sum: Long)
+case class Measurements(sum: Long, last: String)

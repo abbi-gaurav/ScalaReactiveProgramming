@@ -1,14 +1,14 @@
 package learn.akka.stream.integration
 
+import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.ws.{Message, TextMessage}
 import akka.http.scaladsl.server.{Directives, Route}
 import akka.stream.ActorMaterializer
-import akka.stream.scaladsl.Flow
+import akka.stream.scaladsl.{Flow, Sink}
 import akka.util.Timeout
-import akka.{Done, NotUsed}
-import learn.akka.stream.integration.Total.{CurrentTotal, GetTotal, Increment}
+import learn.akka.stream.integration.Total._
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -22,7 +22,7 @@ object MeasurementWebSocket extends App with Directives {
   private implicit val executionContext = system.dispatcher
   private val total: ActorRef = system.actorOf(Props[Total], "total")
 
-  val measurementsWebSocket: Flow[Message, Message, NotUsed] =
+  val measurementsWebSocket = (sink: Sink[Increment, NotUsed]) =>
     Flow[Message]
       .collect {
         case TextMessage.Strict(text) => Future.successful(text)
@@ -30,21 +30,16 @@ object MeasurementWebSocket extends App with Directives {
       }
       .mapAsync(parallelism = 1)(f = identity)
       .groupedWithin(n = 1000, d = 1 second)
-      .map(messages => (messages.last, Messages.parse(messages)))
-      .mapAsync(1) {
-        case (lastMessage, measurements) =>
-          import akka.pattern.ask
-          implicit val askTimeout = Timeout(30 seconds)
-          (total ? Increment(measurements.sum))
-            .mapTo[Done]
-            .map(_ => lastMessage)
-      }
-      .map(Messages.ack)
+      .map(Messages.parse)
+      .map(measurements => Increment(measurements.sum, measurements.last))
+      .alsoTo(sink)
+      .map(increment => Messages.ack(increment.lastMessage))
 
   val route: Route =
-    path("measurements") {
+    path("measurements" / LongNumber) { id =>
       get {
-        handleWebSocketMessages(measurementsWebSocket)
+        val sink = Sink.actorRefWithAck(total, Init, Ack, Complete(id))
+        handleWebSocketMessages(measurementsWebSocket(sink))
       }
     } ~ path("total") {
       get {
