@@ -1,4 +1,4 @@
-package learn.akka.stream.integration
+package learn.akka.stream.integration.part1
 
 import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem, Props}
@@ -8,7 +8,7 @@ import akka.http.scaladsl.server.{Directives, Route}
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{Flow, Sink}
 import akka.util.Timeout
-import learn.akka.stream.integration.Total._
+import learn.akka.stream.integration.part1.Total._
 
 import scala.concurrent.Future
 import scala.concurrent.duration._

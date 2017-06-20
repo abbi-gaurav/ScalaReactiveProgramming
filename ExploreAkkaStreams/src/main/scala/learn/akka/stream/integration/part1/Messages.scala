@@ -1,4 +1,4 @@
-package learn.akka.stream.integration
+package learn.akka.stream.integration.part1
 
 import akka.http.scaladsl.model.ws.TextMessage
 

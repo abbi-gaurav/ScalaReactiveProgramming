@@ -1,7 +1,7 @@
-package learn.akka.stream.integration
+package learn.akka.stream.integration.part1
 
 import akka.actor.Actor
-import learn.akka.stream.integration.Total._
+import learn.akka.stream.integration.part1.Total._
 
 /**
   * Created by gabbi on 23.04.17.
