@@ -1,4 +1,4 @@
-package learn.akka.stream.part2
+package learn.akka.stream.integration.part2
 
 import akka.Done
 import akka.actor.{Actor, ActorSystem, Props}
