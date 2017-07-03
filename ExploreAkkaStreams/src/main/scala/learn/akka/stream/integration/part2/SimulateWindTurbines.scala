@@ -14,6 +14,6 @@ object SimulateWindTurbines extends App {
   for (_ <- 1 to 1) {
     val id = java.util.UUID.randomUUID().toString
     //TODO: Config.endpoint
-    system.actorOf(WindTurbineSimulator.props(id, "ws://echo.websocket.org"), id)
+    system.actorOf(WindTurbineSimulator.props(id, "ws://localhost:8080/echo"), id)
   }
 }

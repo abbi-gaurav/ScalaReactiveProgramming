@@ -1,4 +1,4 @@
-package learn.akka.stream.motivatingExample
+package learn.akka.stream.integration.part2
 
 import akka.NotUsed
 import akka.actor.ActorSystem
@@ -15,14 +15,12 @@ import scala.concurrent.duration._
 /**
   * Created by gabbi on 02.04.17.
   */
-object ServerWithStream extends App with Directives {
+object EchoWebSocket extends App with Directives {
   private implicit val system = ActorSystem("AkkaStreams")
   private implicit val materializer = ActorMaterializer()
   private implicit val executionContext = system.dispatcher
 
-  private val database = new Database
-
-  private val measurementWebSocketService: Flow[Message, Message, NotUsed] =
+  private val echoWebSocketService =
     Flow[Message]
       .collect {
         case TextMessage.Strict(text) => Future.successful(text)
@@ -30,14 +28,11 @@ object ServerWithStream extends App with Directives {
           textStream.runFold("")(_ + _).flatMap(Future.successful)
       }
       .mapAsync(1)(identity)
-      .map(InsertMessage.parse)
-      .groupedWithin(5, 1 second)
-      .mapAsync(10)(ms => database.bulkInsertAsync(ms.map(_.message)))
-      .map((messages: Seq[String]) => InsertMessage.ack(messages.last))
+      .map(str => TextMessage(str))
 
-  val route: Route = path("measurement") {
+  val route: Route = path("echo" / IntNumber) { id =>
     get {
-      handleWebSocketMessages(measurementWebSocketService)
+      handleWebSocketMessages(echoWebSocketService)
     }
   }
 
