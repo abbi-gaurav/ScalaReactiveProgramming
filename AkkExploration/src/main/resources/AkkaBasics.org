@@ -1,0 +1,76 @@
+* Background
+** *Erlang : a purely fucntional language whose concurrency model is based on actors*
+** *Akka: an actor model for jvm with scala and java apis*
+* About Actors  
+** has an identity
+** has a behaviour
+** always interact with asynchronous message passing
+** multi tasking
+** multi threading
+** become: asynchronous change of behavior only when next message is processed
+** are always created by actors, so they always form a heirarchy
+** no direct access to Actor behaviour
+* Messages:
+** received sequentially by enqueue and dequeue
+** *each message processing is an atomic unit of execution*
+** *behavior change is effective before processing next message*
+** *it is a good practice to describe all the messages of an actor in its companion object*
+* Failure handling in messages
+** failures are also signalled by sending messages
+** Mandatory parental Supervision
+** default supervision strategy
+*** restart actor when they fail
+** Strategy types
+*** OneForOneStrategy : deals with each Actor in isolation
+**** OneForOneStrategy(maxNrOfRetries = 10, withinTimeRange = 1.minute) _implies that we can only restart ten times in a minutes, 11th one will be turned to a stop_
+*** AllForOneStrategy: decision applies to all Children
+** Restart : 
+*** *ActorRef stays same after restart*
+*** Actor local state can not be kept across restarts
+* lifecycle monitoring
+** an actorRef implies liveness
+** restarts are not externally visible
+** after stop no more responses
+** deathwatch
+*** context.watch(targetActorRef)
+*** when targetActorRef terminates a Terminated(targetActorRef) message is sent
+*** *if watching, then must handle Terminated, otherwise Actor default behaviour might stop the parent when if handles termiated message by sending a DeathPactException*
+** child actors : each actor maintains a list of child actors it creates
+*** when context.actorOf returns, a child has been entered
+*** child is removed when Terminated is received or even whithout death watch
+*** an actor name is available IFF there is no such child
+* *error Kernel*
+** keep important data near the roots, delegate risk to leaves
+** restarts are recursive (supervised actors are part of the state)
+** restarts are more frequent near the leaves
+** avoid restarting actors with important state
+** puprpose of a restart is to reset the actor to a known good state
+** try to keep as less important state to leave actors as possible
+** *make the leaves behave like pure funtions, so that any failures can be easily retried and there is no state managment needed*
+* Persistent Actor state
+** shall not lose state due to system failure
+** must persist state as needed
+** recover state as needed
+** two possiblities
+*** in place updates
+**** receovery in constant time
+**** data volume depends on number of records
+*** append only fashion
+**** history  can be replayed, audited or restored
+**** processing errors can be fixed retroactively
+**** additional insight
+**** append-only stream optimizes IO bandwidth
+**** immutable changes
+* immutable snapshots can be used to bound recovery time
+* how actors do it?
+** being persistent means "taking notes"
+*  *events are facts about the past*
+** their purpose is to describe change
+** event stream : broadcasting the message
+*** trait EventStream{}
+* Reactive applications
+** is non-blocking and event driven from top to bottom
+** actors are run by a dispatcher which may be potentially shared and can also run futures
+** Prefer immutable data structure since they can be shared
+** do not refer to actor state from code running asynchronously
+** Prefer *context.become* for different states with data local to the behaviour

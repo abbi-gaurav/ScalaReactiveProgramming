@@ -1,0 +1,85 @@
+* Actor Reference
+** is a subtype of ActorRef, whose foremost purpose is to support sending messages to the actor it represents
+** e.g
+*** self
+*** sender()
+* Actor Path see [[*remote%20deployment][remote deployment]]
+**  actors are created in a strictly hierarchical fashion
+** a unique sequence of actor names given by recursively following the supervision links between child and parent down towards the root of the actor system
+** e.g
+#+BEGIN_SRC scala
+akka://my-sys/user/service-a/worker1
+akka.tcp://my-sys@host.example.com:5678/user/service-b
+#+END_SRC
+** Logical Actor Paths
+*** reprsents *supervision hierarchy*
+*** unique path obtained by following the parental supervision links towards the root guardian is called the logical actor path
+** Physical Actor Paths
+*** reprsents *Actor deployment*
+*** contains information about all the actors where they reside
+* obtaining actor refernces
+** create actor
+** lookup by concrete path
+*** =ActorSystem.actorSelection=
+**** To acquire an ActorRef that is bound to the life-cycle of a specific actor you need to send a message, 
+***** such as the built-in =Identify= message, to the actor and use the =sender()= reference of a reply from the actor.
+*** =ActorContext.actorSelection=
+**** e.g 
+***** =context.actorSelection("../brother") ! msg=
+***** =context.actorSelection("../*") ! msg=
+****** will send message to all siblings including the current actor
+* actor path scopes
+** /user
+** /system
+** /deadLetters
+** /temp
+** /remote
+*** is an artificial path below which all actors reside whose supervisors are remote actor references
+* Example images
+** remote deployment
+[[file:./RemoteDeployment.png]]
+** actor path
+[[file:./ActorPath.png]]
+* Akka remoting
+** *purely driven by configuration*
+** *take care of making sure what is to be passed is serializable* e.g
+*** *Props* if actor has to be created on the remote node
+*** *Messages*
+*** *take care of closures*
+** based on p2p model with equal symmetric functionalities in both the hosts
+* IN-PROGRESS explore akka clustering
+** *Basics*
+*** allows you to create an actor somewhere on a cluster consisting of nodes which all share the same actor system, 
+*** without knowing exactly which node it is on
+*** Other machines can join and leave the cluster at run time
+*** separate *clustering library*
+*** *Note*: ActorSystem name and seed nodes name should be same
+** Akka Cluster
+*** is a dynamic group of nodes
+*** each node has an actor system that listens to the network
+*** refer 
+**** cluster topology
+[[file:./AkkaCluster.png]]
+**** job processing
+[[file:./AkkaClusterJobProcessing.png]]
+*** features
+**** *Cluster membership* 
+***** Fault tolerant membership for actor systems.
+**** *Load balancing* 
+***** Routing messages to actors in the cluster based on a routing algorithm
+**** *Node partitioning* 
+***** A node can be given a specific role in the cluster. Routers can be configured to only send messages to nodes with a specific role.
+**** *Partition points*                                            :doubt:
+***** An actor system can be partitioned in actor sub-trees that are located on different nodes. 
+***** Right now only top-level partition points are supported. 
+***** This means that you can only access top level actors on nodes in the cluster using routers.
+*** seed node
+**** Seed nodes are both the starting point for the cluster, and they serve as the first point of contact for other nodes.
+**** Nodes join the cluster by sending a join message which contains the unique address of the node that joins
+**** The first node in the seed list starts up and automatically joins itself and forms the cluster.
+*** initialize cluster
+[[file:./initialize_cluster.png]]
+*** 
+* Clustering Example 1 *Word count job*
+** cluster toplogy
+[[file:./wc_cluster_toplogy.png]]
