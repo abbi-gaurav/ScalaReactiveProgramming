@@ -4,9 +4,9 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.ws.{Message, TextMessage, WebSocketRequest, WebSocketUpgradeResponse}
+import akka.stream._
 import akka.stream.scaladsl.GraphDSL.Builder
 import akka.stream.scaladsl.{Flow, GraphDSL, Keep, Sink, Source}
-import akka.stream.{ActorMaterializer, FlowShape, Graph, SourceShape}
 import akka.{Done, NotUsed}
 import learn.akka.stream.integration.part2.WindTurbineSimulator._
 
@@ -45,25 +45,28 @@ class WebSocketClient(id: String, endpoint: String, supervisor: ActorRef)
 
   private val incoming: Graph[FlowShape[Message, Unit], NotUsed] = GraphDSL.create() { implicit builder =>
     val flow: FlowShape[Message, Unit] = builder.add {
-      Flow[Message].collect {
-        case TextMessage.Strict(text) => Future.successful(text)
-        case TextMessage.Streamed(textStream) => textStream.runFold("")(_ + _).flatMap(Future.successful)
-      }
+      Flow[Message]
+        .collect {
+          case TextMessage.Strict(text) => Future.successful(text)
+          case TextMessage.Streamed(textStream) => textStream.runFold("")(_ + _).flatMap(Future.successful)
+        }
         .mapAsync(1)(identity)
         .map(println)
     }
     FlowShape(flow.in, flow.out)
   }
 
-  private val (eventualUpgradeResponse: Future[WebSocketUpgradeResponse], eventualDone: Future[Done]) = Source
-    .fromGraph(outgoing)
-    .viaMat(webSocket)(Keep.right)
-    .via(incoming)
-    .toMat(Sink.ignore)(Keep.both)
-    .run()
+  val ((eventualUpgradedResponse: Future[WebSocketUpgradeResponse], killSwitch: UniqueKillSwitch), eventualDone: Future[Done]) =
+    Source
+      .fromGraph(outgoing)
+      .viaMat(webSocket)(Keep.right)
+      .viaMat(KillSwitches.single)(Keep.both)
+      .via(incoming)
+      .toMat(Sink.ignore)(Keep.both)
+      .run()
 
   private val connected: Future[Unit] =
-    eventualUpgradeResponse.map { (upgradedResponse: WebSocketUpgradeResponse) =>
+    eventualUpgradedResponse.map { (upgradedResponse: WebSocketUpgradeResponse) =>
       upgradedResponse.response.status match {
         case StatusCodes.SwitchingProtocols => supervisor ! Upgraded
         case statusCode => supervisor ! FailedUpgrade(statusCode = statusCode)

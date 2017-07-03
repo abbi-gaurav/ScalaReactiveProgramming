@@ -30,7 +30,7 @@ object EchoWebSocket extends App with Directives {
       .mapAsync(1)(identity)
       .map(str => TextMessage(str))
 
-  val route: Route = path("echo" / IntNumber) { id =>
+  val route: Route = path("echo" / Segment) { (id: String) =>
     get {
       handleWebSocketMessages(echoWebSocketService)
     }
