@@ -32,7 +32,7 @@ class WindTurbineSimulator(id: String, endpoint: String)(implicit materializer: 
 
   private val webSocketClient: WebSocketClient = WebSocketClient(id, endpoint, self)
 
-  override def postStop() = {
+  override def postStop(): Unit = {
     log.info(s"$id : Stopping WebSocket connection")
     webSocketClient.killSwitch.shutdown()
   }

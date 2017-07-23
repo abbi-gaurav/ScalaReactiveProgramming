@@ -6,7 +6,7 @@ import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.ws.{Message, TextMessage, WebSocketRequest, WebSocketUpgradeResponse}
 import akka.stream._
 import akka.stream.scaladsl.GraphDSL.Builder
-import akka.stream.scaladsl.{Flow, GraphDSL, Keep, Sink, Source}
+import akka.stream.scaladsl.{Flow, GraphDSL, Keep, RunnableGraph, Sink, Source}
 import akka.{Done, NotUsed}
 import learn.akka.stream.integration.part2.WindTurbineSimulator._
 
@@ -56,14 +56,12 @@ class WebSocketClient(id: String, endpoint: String, supervisor: ActorRef)
     FlowShape(flow.in, flow.out)
   }
 
-  val ((eventualUpgradedResponse: Future[WebSocketUpgradeResponse], killSwitch: UniqueKillSwitch), eventualDone: Future[Done]) =
-    Source
-      .fromGraph(outgoing)
-      .viaMat(webSocket)(Keep.right)
-      .viaMat(KillSwitches.single)(Keep.both)
-      .via(incoming)
-      .toMat(Sink.ignore)(Keep.both)
-      .run()
+  private val s1: Source[TextMessage.Strict, NotUsed] = Source.fromGraph(outgoing)
+  private val s2: Source[Message, Future[WebSocketUpgradeResponse]] = s1.viaMat(webSocket)(Keep.right)
+  private val s3: Source[Message, (Future[WebSocketUpgradeResponse], UniqueKillSwitch)] = s2.viaMat(KillSwitches.single)(Keep.both)
+  private val s4: Source[Unit, (Future[WebSocketUpgradeResponse], UniqueKillSwitch)] = s3.via(incoming)
+  private val runnableGraph: RunnableGraph[((Future[WebSocketUpgradeResponse], UniqueKillSwitch), Future[Done])] = s4.toMat(Sink.ignore)(Keep.both)
+  val ((eventualUpgradedResponse: Future[WebSocketUpgradeResponse], killSwitch: UniqueKillSwitch), eventualDone: Future[Done]) = runnableGraph.run()
 
   private val connected: Future[Unit] =
     eventualUpgradedResponse.map { (upgradedResponse: WebSocketUpgradeResponse) =>
