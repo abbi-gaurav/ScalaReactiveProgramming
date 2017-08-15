@@ -1,32 +1,32 @@
 * Materializer
-** abstraction for evaluation engine for streams
-** materialized value is what we get when we run a stream
+- abstraction for evaluation engine for streams
+- materialized value is what we get when we run a stream
 * Source
-** it is the data creator
-** serves as input source to stream
-** How a source looks like??
+- it is the data creator
+- serves as input source to stream
+- How a source looks like??
 [[file:images/source.png]]
-** Also possible to feed a source with messages that are sent to actor
-#+BEGIN_SRC 
+- Also possible to feed a source with messages that are sent to actor
+#+BEGIN_SRC
 val s = Source
   .actorRef[Int](bufferSize = 0, OverflowStrategy.fail)
   .mapMaterializedValue(run)
 #+END_SRC
 * Sink
-** endpoint of stream
-** consumes data
-** when we want to specify the behavior of the data collector in a reusable way without evaluating the stream
-** Sink image
+- endpoint of stream
+- consumes data
+- when we want to specify the behavior of the data collector in a reusable way without evaluating the stream
+- Sink image
 [[file:images/sink.png]]
-** connecting source to sink
-#+BEGIN_SRC 
+- connecting source to sink
+#+BEGIN_SRC
 scala> val flow = source to sink
 flow: akka.stream.scaladsl.RunnableGraph[akka.NotUsed] = ...
 #+END_SRC
-** connected
+- connected
 [[file:images/connected.png]]
-** one can also forward all values that arrive at a sink to an actor
-#+BEGIN_SRC 
+- one can also forward all values that arrive at a sink to an actor
+#+BEGIN_SRC
 scala> val sink = Sink.actorRef[Int](actor, onCompleteMessage = "stream completed")
 sink: akka.stream.scaladsl.Sink[Int,akka.NotUsed] = ...
 
@@ -36,14 +36,14 @@ runnable: akka.stream.scaladsl.RunnableGraph[akka.NotUsed] = ...
 scala> runnable.run()
 #+END_SRC
 * Flow
-** act as a connector between different streams 
-** can be used to transform its elements
+- act as a connector between different streams
+- can be used to transform its elements
 [[file:images/flow.png]]
-** *If a Flow is connected to a Source a new Source is the result*
-** *If a Flow connected to a Sink creates a new Sink*
-** *a Flow connected with both a Source and a Sink results in a RunnableFlow*
+- *If a Flow is connected to a Source a new Source is the result*
+- *If a Flow connected to a Sink creates a new Sink*
+- *a Flow connected with both a Source and a Sink results in a RunnableFlow*
 [[file:images/runnableFlow.png]]
-#+BEGIN_SRC 
+#+BEGIN_SRC
 scala> val doubler = Flow[Int].map(elem => elem * 2)
 doubler: akka.stream.scaladsl.Flow[Int,Int,akka.NotUsed] = ...
 
@@ -51,31 +51,51 @@ scala> val runnable = source via invert via doubler to sink
 runnable: akka.stream.scaladsl.RunnableGraph[akka.NotUsed] = ...
 #+END_SRC
 * Akka streams
-** Linear
-** Non-linear
-* Backpressure in action
-** when you run a stream
-*** requests for data (pull) are issued from the sink and flow upstream until they reach the source
-*** at that point the source is authorized to send the actual data downstream (push). 
-*** there is a 1-to-1 relationship between push and pull calls
-*** *no stage can push something downstream unless it received a pull beforehand.*
-*** If a stage is too busy with its job, it will stop pulling, effectively applying backpressure on the upstream stages
+- Linear
+- Non-linear
+* Backpressure in action : when you run a stream
+
+- requests for data (pull) are issued from the sink and flow upstream until they reach the source
+- at that point the source is authorized to send the actual data downstream (push).
+- there is a 1-to-1 relationship between push and pull calls
+- *no stage can push something downstream unless it received a pull beforehand.*
+- If a stage is too busy with its job, it will stop pulling, effectively applying backpressure on the upstream stages
 * Errors / failures
-** error is accessible within the stream as a normal data element
-** a failure means that the stream itself has failed and is collapsing
-** on the Reactive Streams interface level data elements (including errors) are signaled via onNext while failures raise the onError signal
+- error is accessible within the stream as a normal data element
+- a failure means that the stream itself has failed and is collapsing
+- on the Reactive Streams interface level data elements (including errors) are signaled via onNext while failures raise the onError signal
+* GraphStage
+** Basics
+- _ProcessingStage_ common name for all the building blocks that make up a _Graph_
+- _Shape_
+  - determined by number of inlets and outlets
+  - *FlowShape*
+    I ~> Shape1 ~> O
+  - *Shape2*
+      I1 +-----+
+         |Shape| O
+         |     |
+      I2 +-----+
+  - BidiFlow
+    I1 ~>    +-------+  ~> O1
+             |       |
+             |       |
+    O2 ~>    +-------+  <~ I2
+- *GraphStage*  implementation block behind any _ProcessingStage_ of _RunnableGraph_
+** When to use
+- need to maintain state and it is not possible or too complex when using _statefulMapConcat_
+- input and output elements are not paired in one-to-one fashion
 * Akka HTTP
-** expose an incoming connection in the form of a Source instance
-** applying backpressure on this Source will make Akka HTTP stop consuming data from the network:
-** in due time this will lead to a 0 TCP window, effectively applying the backpressure on the sending party itself
+- expose an incoming connection in the form of a Source instance
+- applying backpressure on this Source will make Akka HTTP stop consuming data from the network:
+- in due time this will lead to a 0 TCP window, effectively applying the backpressure on the sending party itself
 * Integrating Actor with Stream
-** Actors useful when:
-*** mutable state
-** Streams
-*** flow contraol
-** sometimes both are needed 
-** a discontinuity between 
-*** the flow-controlled, unbounded stream-processing offered by the Akka Streams API, 
-*** and the asynchronous messaging of actors, which is not flow-controlled
-** Ask Pattern with mapAsync
-** 
+- Actors useful when:
+  - mutable state
+- Streams
+  - flow contraol
+- sometimes both are needed
+- a discontinuity between
+  - the flow-controlled, unbounded stream-processing offered by the Akka Streams API,
+  - and the asynchronous messaging of actors, which is not flow-controlled
+- Ask Pattern with mapAsync
