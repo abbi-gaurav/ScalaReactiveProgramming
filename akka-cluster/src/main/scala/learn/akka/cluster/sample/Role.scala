@@ -1,6 +1,8 @@
 package learn.akka.cluster.sample
 
-sealed trait Role
+sealed trait Role{
+  def getDomainString: String = toString.toLowerCase
+}
 
 case object Seed extends Role
 
