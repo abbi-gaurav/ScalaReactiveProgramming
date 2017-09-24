@@ -12,17 +12,17 @@ class ProducerActor extends Actor with ActorLogging {
 
   import context.dispatcher
 
-  private val cluster = Cluster(context.system)
-  private var consumers = List.empty[ActorRef]
+  private val cluster: Cluster = Cluster(context.system)
+  private var consumers: List[ActorRef] = List.empty[ActorRef]
   private var counter: Long = 0L
+
+  context.system.scheduler.schedule(10.seconds, 2.seconds, self, SimpleMessage)
 
   override def preStart(): Unit = cluster.subscribe(self, classOf[MemberUp])
 
   override def postStop(): Unit = cluster.unsubscribe(self)
 
   override def receive: Receive = messenger orElse watcher
-
-  context.system.scheduler.schedule(10.seconds, 2.seconds, self, SimpleMessage)
 
   private def messenger: Receive = {
     case SimpleMessage =>
