@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: akka-seed
+  labels:
+    app: akka-seed
+spec:
+  ports:
+  - port: 2551
+    name: port
+  clusterIP: None
+  selector:
+    app: akka-seed
+---
+apiVersion: apps/v1beta1
+kind: StatefulSet
+metadata:
+  name: akka-seed
+spec:
+  serviceName: "akka-seed"
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: akka-seed
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+      - name: akka-cluster
+        image: gabbi/akka-cluster:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 2551
+          name: port
+        envFrom:
+        - configMapRef:
+            name: akka-cluster
+        env:
+        - name: ROLES
+          value: "seed"
+        command:
+          - "/bin/sh"
+          - "-c"
+          - "HOST=$(hostname) java -jar $VM_OPTS *assembly*.jar"

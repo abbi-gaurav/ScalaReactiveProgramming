@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: akka-cluster
+data:
+  PORT: "2551"
+  SEED_HOSTS: "akka-seed-0"
+  VM_OPTS : "-Dakka.io.dns.resolver=async-dns -Dakka.io.dns.async-dns.resolve-srv=true -Dakka.io.dns.async-dns.resolv-conf=on"
