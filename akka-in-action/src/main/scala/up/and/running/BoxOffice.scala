@@ -36,7 +36,7 @@ object BoxOffice {
 
 class BoxOffice(implicit timeout: Timeout) extends Actor {
 
-  private def createTicketSeller(event: String): ActorRef = context.actorOf(TicketSeller.props(event), name = event)
+  private[running] def createTicketSeller(event: String): ActorRef = context.actorOf(TicketSeller.props(event), name = event)
 
   override def receive: Receive = {
     case CreateEvent(name, tickets) =>
