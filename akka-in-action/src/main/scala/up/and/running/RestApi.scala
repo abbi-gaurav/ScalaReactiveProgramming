@@ -1,18 +1,17 @@
 package up.and.running
 
-import akka.actor.{ActorRef, ActorSystem}
+import akka.actor.ActorRef
 import akka.util.Timeout
 import api.common.RestRoutes
-import api.common.actors.BoxOffice
 
-import scala.concurrent.ExecutionContextExecutor
+import scala.concurrent.ExecutionContext
 
-class RestApi(actorSystem: ActorSystem, timeout: Timeout) extends RestRoutes {
+class RestApi(ec: ExecutionContext, timeout: Timeout)(boxOfficeCreator: => ActorRef) extends RestRoutes {
   implicit val requestTimeout: Timeout = timeout
 
-  implicit def executionContext: ExecutionContextExecutor = actorSystem.dispatcher
+  implicit def executionContext: ExecutionContext = ec
 
-  override def createBoxOffice(): ActorRef = actorSystem.actorOf(BoxOffice.props, BoxOffice.name)
+  override def createBoxOffice(): ActorRef = boxOfficeCreator
 }
 
 

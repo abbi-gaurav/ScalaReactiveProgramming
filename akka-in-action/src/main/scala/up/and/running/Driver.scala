@@ -1,34 +1,16 @@
 package up.and.running
 
 import akka.actor.ActorSystem
-import akka.event.{Logging, LoggingAdapter}
-import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Route
-import akka.stream.ActorMaterializer
-import api.common.RequestTimeout
+import akka.util.Timeout
+import api.common.actors.BoxOffice
+import api.common.{RequestTimeout, StartUp}
 import com.typesafe.config.ConfigFactory
 
-import scala.concurrent.{ExecutionContextExecutor, Future}
-import scala.util.{Failure, Success}
-
-object Driver extends App with RequestTimeout {
+object Driver extends App with RequestTimeout with StartUp {
   private val config = ConfigFactory.load("up-and-running/up-and-running.conf")
-  private val host = config.getString("http.host")
-  private val port = config.getInt("http.port")
-
-  private implicit val actorSystem: ActorSystem = ActorSystem()
-  private implicit val ec: ExecutionContextExecutor = actorSystem.dispatcher
-
-  private val api: Route = new RestApi(actorSystem, requestTimeout(config)).routes
-  private implicit val actorMaterializer: ActorMaterializer = ActorMaterializer()
-
-  private val bindingFuture: Future[Http.ServerBinding] = Http().bindAndHandle(api, host, port)
-
-  private val log: LoggingAdapter = Logging(actorSystem.eventStream, "gabbi-ticks")
-  bindingFuture.onComplete {
-    case Success(serverBinding) => log.info(s"RestApi bound to ${serverBinding.localAddress} ")
-    case Failure(throwable) =>
-      log.error(throwable, s"failed to bind to $host : $port")
-      actorSystem.terminate()
-  }
+  private implicit val system: ActorSystem = ActorSystem("up-and-running", config)
+  private implicit val timeout: Timeout = requestTimeout(config)
+  private val api: Route = new RestApi(system.dispatcher, timeout)(system.actorOf(BoxOffice.props, BoxOffice.name)).routes
+  startUp(api)
 }
