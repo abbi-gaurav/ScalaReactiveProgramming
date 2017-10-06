@@ -5,14 +5,14 @@ import akka.event.{Logging, LoggingAdapter}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
-import akka.util.Timeout
-import com.typesafe.config.{Config, ConfigFactory}
+import api.common.RequestTimeout
+import com.typesafe.config.ConfigFactory
 
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.util.{Failure, Success}
 
 object Driver extends App with RequestTimeout {
-  private val config = ConfigFactory.load("up-and-running.conf")
+  private val config = ConfigFactory.load("up-and-running/up-and-running.conf")
   private val host = config.getString("http.host")
   private val port = config.getInt("http.port")
 
@@ -30,16 +30,5 @@ object Driver extends App with RequestTimeout {
     case Failure(throwable) =>
       log.error(throwable, s"failed to bind to $host : $port")
       actorSystem.terminate()
-  }
-}
-
-trait RequestTimeout {
-
-  import scala.concurrent.duration._
-
-  def requestTimeout(config: Config): Timeout = {
-    val t = config.getString("akka.http.server.request-timeout")
-    val d = Duration(t)
-    FiniteDuration(d.length, d.unit)
   }
 }

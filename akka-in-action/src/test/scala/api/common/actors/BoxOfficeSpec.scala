@@ -1,11 +1,11 @@
-package up.and.running
+package api.common.actors
 
 import akka.actor.{ActorSystem, Props}
 import akka.testkit.{DefaultTimeout, ImplicitSender, TestKit}
+import api.common.actors.BoxOffice._
+import api.common.actors.TicketSeller.{Add, Ticket, Tickets}
 import base.StopSystemAfterAll
 import org.scalatest.{MustMatchers, WordSpecLike}
-import up.and.running.BoxOffice._
-import up.and.running.TicketSeller.{Add, Ticket, Tickets}
 
 import scala.language.postfixOps
 
@@ -34,7 +34,7 @@ class BoxOfficeSpec extends TestKit(ActorSystem("box-office-spec"))
 
     "create a child actor when event is created and sends it a Ticket message" in {
       val boxOffice = system.actorOf(Props(new BoxOffice() {
-        override private[running] def createTicketSeller(event: String) = testActor
+        override private[actors] def createTicketSeller(event: String) = testActor
       }))
 
       val tickets = 3

@@ -1,7 +1,7 @@
 package scenarios
 
 import akka.actor.{ActorSystem, Props}
-import akka.testkit.{TestActorRef, TestKit}
+import akka.testkit.TestKit
 import base.StopSystemAfterAll
 import org.scalatest.{MustMatchers, WordSpecLike}
 import scenarios.SilentActor.{GetState, SilentMessage}

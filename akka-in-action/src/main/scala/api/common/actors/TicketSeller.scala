@@ -1,4 +1,4 @@
-package up.and.running
+package api.common.actors
 
 import akka.actor.{Actor, PoisonPill, Props}
 

@@ -1,5 +1,6 @@
-package up.and.running
+package api.common
 
+import api.common.actors.TicketSeller
 import spray.json._
 
 case class EventDescription(tickets: Int)
@@ -12,7 +13,7 @@ case class Error(message: String)
 
 trait EventMarshalling extends DefaultJsonProtocol {
 
-  import BoxOffice._
+  import actors.BoxOffice._
 
   implicit val eventDescriptionFormat: RootJsonFormat[EventDescription] = jsonFormat1(EventDescription)
   implicit val eventFormat: RootJsonFormat[Event] = jsonFormat2(Event)

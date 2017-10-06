@@ -1,10 +1,10 @@
-package up.and.running
+package api.common.actors
 
 import akka.actor.{ActorRef, ActorSystem}
 import akka.testkit.{ImplicitSender, TestKit}
+import api.common.actors.TicketSeller._
 import base.StopSystemAfterAll
 import org.scalatest.{MustMatchers, WordSpecLike}
-import up.and.running.TicketSeller._
 
 import scala.collection.immutable
 import scala.language.postfixOps

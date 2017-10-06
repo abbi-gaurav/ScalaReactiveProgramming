@@ -1,8 +1,7 @@
-package up.and.running
+package api.common.actors
 
 import akka.actor.{Actor, ActorRef, Props}
 import akka.util.Timeout
-import up.and.running.BoxOffice._
 
 import scala.collection.immutable
 import scala.concurrent.{ExecutionContextExecutor, Future}
@@ -35,8 +34,8 @@ object BoxOffice {
 }
 
 class BoxOffice(implicit timeout: Timeout) extends Actor {
-
-  private[running] def createTicketSeller(event: String): ActorRef = context.actorOf(TicketSeller.props(event), name = event)
+  import BoxOffice._
+  private[actors] def createTicketSeller(event: String): ActorRef = context.actorOf(TicketSeller.props(event), name = event)
 
   override def receive: Receive = {
     case CreateEvent(name, tickets) =>
