@@ -17,6 +17,13 @@ akka.tcp://my-sys@host.example.com:5678/user/service-b
 ** Physical Actor Paths
 *** reprsents *Actor deployment*
 *** contains information about all the actors where they reside
+** example
+#+BEGIN_SRC scala
+                     Server    Port      Top level Actor 
+  akka.tcp://backend:127.0.0.1:2551/user/simple
+  Protocol   ActorSystem            Guardian
+
+#+END_SRC
 * obtaining actor refernces
 ** create actor
 ** lookup by concrete path
@@ -28,6 +35,7 @@ akka.tcp://my-sys@host.example.com:5678/user/service-b
 ***** =context.actorSelection("../brother") ! msg=
 ***** =context.actorSelection("../*") ! msg=
 ****** will send message to all siblings including the current actor
+*** The ActorSelection is an object that represents all the actors that have been found in the actor system with the actorSelection method.
 * actor path scopes
 ** /user
 ** /system
@@ -47,7 +55,7 @@ akka.tcp://my-sys@host.example.com:5678/user/service-b
 *** *Messages*
 *** *take care of closures*
 ** based on p2p model with equal symmetric functionalities in both the hosts
-* IN-PROGRESS explore akka clustering
+* explore akka clustering
 ** *Basics*
 *** allows you to create an actor somewhere on a cluster consisting of nodes which all share the same actor system, 
 *** without knowing exactly which node it is on
