@@ -1,4 +1,4 @@
-package remoting
+package remoting.selection
 
 import akka.actor._
 

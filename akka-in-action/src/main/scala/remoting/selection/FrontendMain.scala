@@ -1,4 +1,4 @@
-package remoting
+package remoting.selection
 
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.http.scaladsl.server.Route
