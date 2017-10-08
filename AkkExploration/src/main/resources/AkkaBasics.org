@@ -74,3 +74,10 @@
 ** Prefer immutable data structure since they can be shared
 ** do not refer to actor state from code running asynchronously
 ** Prefer *context.become* for different states with data local to the behaviour
+* Structural patterns
+| Pipes and filters | Sequential processing     |
+| Scater gather     | parallelizing tasks       |
+| Receipent list    | scatter                   |
+| aggregator        | gather                    |
+| Routing slip      | dynamic pipes and filters |
+|                   |                           |
