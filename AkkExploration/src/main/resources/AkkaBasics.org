@@ -75,9 +75,9 @@
 ** do not refer to actor state from code running asynchronously
 ** Prefer *context.become* for different states with data local to the behaviour
 * Structural patterns
-| Pipes and filters | Sequential processing     |
-| Scater gather     | parallelizing tasks       |
-| Receipent list    | scatter                   |
-| aggregator        | gather                    |
-| Routing slip      | dynamic pipes and filters |
-|                   |                           |
+| Pipes and filters | Sequential processing     |                                          |
+| Scater gather     | parallelizing tasks       |                                          |
+| Receipent list    | scatter                   |                                          |
+| aggregator        | gather                    |                                          |
+| Routing slip      | dynamic pipes and filters | roadmap of tasks is added to the message |
+|                   |                           |                                          |
