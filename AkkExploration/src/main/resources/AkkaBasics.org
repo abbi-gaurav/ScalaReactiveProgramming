@@ -81,3 +81,4 @@
 | aggregator        | gather                    |                                          |
 | Routing slip      | dynamic pipes and filters | roadmap of tasks is added to the message |
 |                   |                           |                                          |
+* Router

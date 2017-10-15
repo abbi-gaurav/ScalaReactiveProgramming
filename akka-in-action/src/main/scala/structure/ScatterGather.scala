@@ -14,6 +14,8 @@ case class PhotoMessage(id: String,
                         speed: Option[Int] = None
                        )
 
+case class Photo(license: String, speed: Int)
+
 object ImageProcessing {
   val dateFormat = new SimpleDateFormat("ddMMyyyy HH:mm:ss.SSS")
 
@@ -58,7 +60,7 @@ class GetSpeed(pipe: ActorRef) extends Actor {
   }
 }
 
-class GetTime(pipe:ActorRef) extends Actor {
+class GetTime(pipe: ActorRef) extends Actor {
   override def receive: Receive = {
     case msg: PhotoMessage => pipe ! msg.copy(creationTime = ImageProcessing.getTime(msg.photo))
   }
