@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+service Clock {
+    rpc GetTime (TimeRequest) returns (stream TimeResponse) {
+    }
+}
+
+message TimeRequest {
+}
+
+message TimeResponse {
+    int64 time = 1;
+}
