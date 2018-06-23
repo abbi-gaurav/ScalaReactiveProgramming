@@ -1,10 +1,10 @@
-package akka.cookbook.streams
+package akka.cookbook.streams.basics
 
 import java.nio.file.Paths
 
 import akka.actor.ActorSystem
-import akka.stream.{ActorMaterializer, IOResult}
 import akka.stream.scaladsl.{Compression, FileIO, RunnableGraph, Sink}
+import akka.stream.{ActorMaterializer, IOResult}
 
 import scala.concurrent.Future
 
@@ -20,7 +20,7 @@ object TransformingStreamsApplication extends App {
     .mapConcat(_.split(" ").toList)
     .collect { case w: String if w.nonEmpty =>
       w
-        .replaceAll("""[p{Punct}&&[^.]]""", "")
+        .replaceAll("""[\p{Punct}&&[^.]]""", "")
         .replaceAll(System.lineSeparator(), "")
     }
     .groupBy(maxGroups, identity)

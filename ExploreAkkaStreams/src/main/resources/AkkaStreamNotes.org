@@ -7,7 +7,7 @@
 - How a source looks like??
 [[file:images/source.png]]
 - Also possible to feed a source with messages that are sent to actor
-#+BEGIN_SRC
+#+BEGIN_SRC scala
 val s = Source
   .actorRef[Int](bufferSize = 0, OverflowStrategy.fail)
   .mapMaterializedValue(run)
@@ -54,7 +54,6 @@ runnable: akka.stream.scaladsl.RunnableGraph[akka.NotUsed] = ...
 - Linear
 - Non-linear
 * Backpressure in action : when you run a stream
-
 - requests for data (pull) are issued from the sink and flow upstream until they reach the source
 - at that point the source is authorized to send the actual data downstream (push).
 - there is a 1-to-1 relationship between push and pull calls
@@ -109,3 +108,30 @@ runnable: akka.stream.scaladsl.RunnableGraph[akka.NotUsed] = ...
 - Time aware stages
 - Fan-in stages
 - Fan-out stages
+* custom stream processing
+- extend ~GraphStage~ abstraction
+  - Every GraphStage also encompasses stage logic
+  - This logic defines a set of handlers (InHandler or OutHandler) that implement the behavior of the different ports.
+  - All of the logic should extend GraphStageLogic and can be stateful or stateless, depending on your use case. 
+- ~Shape~
+  - defines the number of input and output ports in your stage (inlets and outlets)
+  - ~SourceShape~
+  - ~SinkShape~
+  - ~FlowShape~
+  - ~AmorphousShape~
+- *OutHandler*
+  - ~onPull~ method called by downstream stages when there is demand for new elements
+  - ~push~ is used to send elements downstream
+- *InHandler*
+  - ~pull~ and ~grab~ : to request and received elements fron upstream
+  -
+* Pipelining & Parallelizing
+- by default, all stages are run sequentcially in a single actor
+- using ~async~, stage is run asynchronously & have its own internal actor
+  - have internal buffers to make message passing more efficient and less context switch
+- synchronous  [[file:./images/synchronous.png]]
+
+- async [[file:./images/async.png]]
+
+
+- parallel [[file:./images/parallel.png]] 
