@@ -4,7 +4,7 @@ enablePlugins(JavaServerAppPackaging)
 
 name := "akka-bootstrap-k8s-dns"
 
-version := "0.2"
+version := "0.1"
 
 scalaVersion := "2.12.8"
 

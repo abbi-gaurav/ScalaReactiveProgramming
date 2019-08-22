@@ -26,7 +26,7 @@ spec:
       restartPolicy: Always
       containers:
         - name: akka-bootstrap-demo
-          image: "akka-bootstrap-k8s-dns:0.2"
+          image: "akka-bootstrap-k8s-dns:0.1"
           imagePullPolicy: IfNotPresent
           #health
           readinessProbe:
